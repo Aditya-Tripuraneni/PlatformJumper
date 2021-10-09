@@ -14,6 +14,15 @@ RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 YELLOW = (255, 255, 0)
+image = pygame.image.load("background.png")
+
+# SOUND EFFECTS
+jump_SFX = pygame.mixer.Sound("jumpSFX.wav")
+game_over_SFX = pygame.mixer.Sound("gameOverSFX.wav")
+
+# Music
+pygame.mixer.music.load("backGroundMusic.mp3")
+pygame.mixer.music.play(-1)
 
 
 class Player:
@@ -46,8 +55,8 @@ class Player:
         self.game_over = True
 
     def check_collision(self):
-        bottom_left = [self.x, self.y + self.height]
-        bottom_right = [self.x + self.width, self.y + self.height]
+        bottom_left = [self.x, (self.y + self.height) + self.width]
+        bottom_right = [self.x + self.width, (self.y + self.height) + self.width]
 
         # Puts square on top of green platform
         if self.green is True and self.added is False:
@@ -55,9 +64,14 @@ class Player:
             self.y -= green_platform.height
 
         # Checks to see if falls
-        falls = (bottom_right[0] < green_platform.x) or (bottom_left[0] > (blue_platform.x + blue_platform.width))
+
+        falls = (bottom_right[0] < green_platform.x and bottom_right[1] > green_platform.y) or (
+                bottom_left[0] > (blue_platform.x + blue_platform.width) and bottom_left[1] > blue_platform.y)
         if falls:
             self.y += self.velocity
+            if player.y > green_platform.y + 20:
+                player.display_game_over()
+                game_over_SFX.play()
 
         # checks if on blue
         landed_on_blue = blue_platform.x <= bottom_left[0] <= blue_platform.x + blue_platform.width
@@ -76,6 +90,7 @@ class Player:
         collide_with_obstacle = pygame.Rect.colliderect(self.rect, obstacle.obstacle)
         if collide_with_obstacle:
             self.display_game_over()
+            game_over_SFX.play()
 
     def drawCharacter(self, win):
         self.rect = pygame.draw.rect(win, self.colour, (self.x, self.y, self.width, self.height))
@@ -97,6 +112,7 @@ class Obstacle:
 class Platform(Obstacle):
     def __init__(self, x, y, width, height, colour):
         super().__init__(x, y, width, height, colour)
+        self.rect = None
 
     def drawPlatform(self, win):
         pygame.draw.rect(win, self.colour, (self.x, self.y, self.width, self.height))
@@ -108,9 +124,7 @@ green_platform = Platform(100, 480, 100, 20, GREEN)
 blue_platform = Platform(300, 480, 100, 20, BLUE)
 
 while run:
-
     pygame.time.delay(50)
-
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
@@ -124,6 +138,7 @@ while run:
     if not player.is_jump:
         if keys[pygame.K_SPACE]:
             player.is_jump = True
+            jump_SFX.play()
     else:
         if player.jump_count >= -10:
 
@@ -136,11 +151,11 @@ while run:
             player.is_jump = False
             player.jump_count = 10
 
-    if player.game_over is True:
+    if player.game_over:
         run = False
         time.sleep(5)
-
     window.fill((0, 0, 0))
+    window.blit(image, (0, 0))
     player.drawCharacter(window)
     obstacle.drawObstacle(window)
     green_platform.drawPlatform(window)
