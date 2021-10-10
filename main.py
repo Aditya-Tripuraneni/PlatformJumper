@@ -5,7 +5,7 @@ pygame.init()
 WIDTH = 500
 HEIGHT = 500
 window = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Square Jumper Beta")
+pygame.display.set_caption("Platform Jumper")
 run = True
 
 # COLOURS
@@ -48,12 +48,6 @@ class Player:
         text = font.render(f"Points: {self.points}", True, PINK, BLUE)
         window.blit(text, (0, 0))
 
-    def display_game_over(self):
-        font = pygame.font.Font('freesansbold.ttf', 32)
-        text = font.render('Game Over!', True, RED, YELLOW)
-        window.blit(text, (160, 250))
-        self.game_over = True
-
     def check_collision(self):
         bottom_left = [self.x, (self.y + self.height) + self.width]
         bottom_right = [self.x + self.width, (self.y + self.height) + self.width]
@@ -64,14 +58,14 @@ class Player:
             self.y -= green_platform.height
 
         # Checks to see if falls
-
         falls = (bottom_right[0] < green_platform.x and bottom_right[1] > green_platform.y) or (
                 bottom_left[0] > (blue_platform.x + blue_platform.width) and bottom_left[1] > blue_platform.y)
         if falls:
             self.y += self.velocity
             if player.y > green_platform.y + 20:
-                player.display_game_over()
+                display_game_over()
                 game_over_SFX.play()
+                self.game_over = True
 
         # checks if on blue
         landed_on_blue = blue_platform.x <= bottom_left[0] <= blue_platform.x + blue_platform.width
@@ -89,20 +83,17 @@ class Player:
         # Check if square collide with red obstacle
         collide_with_obstacle = pygame.Rect.colliderect(self.rect, obstacle.obstacle)
         if collide_with_obstacle:
-            self.display_game_over()
+            display_game_over()
             game_over_SFX.play()
+            self.game_over = True
 
     def drawCharacter(self, win):
         self.rect = pygame.draw.rect(win, self.colour, (self.x, self.y, self.width, self.height))
 
 
-class Obstacle:
+class Obstacle(Player):
     def __init__(self, x, y, width, height, colour):
-        self.x = x
-        self.y = y
-        self.width = width
-        self.height = height
-        self.colour = colour
+        super().__init__(x, y, width, height, colour)
         self.obstacle = None
 
     def drawObstacle(self, win):
@@ -116,6 +107,12 @@ class Platform(Obstacle):
 
     def drawPlatform(self, win):
         pygame.draw.rect(win, self.colour, (self.x, self.y, self.width, self.height))
+
+
+def display_game_over():
+    font = pygame.font.Font('freesansbold.ttf', 32)
+    text = font.render('Game Over!', True, RED, YELLOW)
+    window.blit(text, (160, 250))
 
 
 player = Player(100, 420, 80, 80, PINK, velocity=9.8)
