@@ -81,8 +81,13 @@ class Player:
             self.blue_turn = True
 
         # Check if square collide with red obstacle
-        collide_with_obstacle = pygame.Rect.colliderect(self.rect, obstacle.obstacle)
+        collide_with_obstacle = pygame.Rect.colliderect(self.rect, obstacle_one.obstacle)
+        collide_with_obstacle_two = pygame.Rect.colliderect(self.rect, obstacle_two.obstacle)
         if collide_with_obstacle:
+            display_game_over()
+            game_over_SFX.play()
+            self.game_over = True
+        elif collide_with_obstacle_two:
             display_game_over()
             game_over_SFX.play()
             self.game_over = True
@@ -115,8 +120,9 @@ def display_game_over():
     window.blit(text, (160, 250))
 
 
-player = Player(100, 420, 80, 80, PINK, velocity=9.8)
-obstacle = Obstacle((WIDTH / 2) - (50 / 2), 400, 50, 100, RED)
+player = Player(100, 420, 80, 80, PINK, velocity=20)
+obstacle_one = Obstacle((WIDTH // 2) - (50 / 2), 400, 50, 100, RED)
+obstacle_two = Obstacle((WIDTH // 2) , 1, 50, 130, RED)
 green_platform = Platform(100, 480, 100, 20, GREEN)
 blue_platform = Platform(300, 480, 100, 20, BLUE)
 
@@ -154,7 +160,8 @@ while run:
     window.fill((0, 0, 0))
     window.blit(image, (0, 0))
     player.drawCharacter(window)
-    obstacle.drawObstacle(window)
+    obstacle_one.drawObstacle(window)
+    obstacle_two.drawObstacle(window)
     green_platform.drawPlatform(window)
     blue_platform.drawPlatform(window)
     player.update_points()
